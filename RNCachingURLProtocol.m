@@ -146,7 +146,7 @@ static NSString *RNCachingURLRedirectedHeader = @"X-RNCache-Redirected";
 
 - (NSURLRequest *)connection:(NSURLConnection *)connection willSendRequest:(NSURLRequest *)request redirectResponse:(NSURLResponse *)response
 {
-    NSMutableURLRequest *redirectableRequest = [[request mutableCopy] autorelease];  
+    NSMutableURLRequest *redirectableRequest = [[request mutableCopy] autorelease];
     @autoreleasepool {
         // Thanks to Nick Dowell https://gist.github.com/1885821
         if (response != nil) {
@@ -239,6 +239,14 @@ static NSString *const kRedirectRequestKey = @"redirectRequest";
   }
 
   return self;
+}
+
+- (void) dealloc {
+    self.data = nil;
+    self.response = nil;
+    self.redirectRequest = nil;
+    
+    [super dealloc];
 }
 
 @end
