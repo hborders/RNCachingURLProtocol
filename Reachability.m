@@ -107,6 +107,8 @@ static void ReachabilityCallback(SCNetworkReachabilityRef target, SCNetworkReach
   if (reachabilityRef != NULL) {
     CFRelease(reachabilityRef);
   }
+    
+    [super dealloc];
 }
 
 + (Reachability *)reachabilityWithHostName:(NSString *)hostName;
@@ -114,7 +116,7 @@ static void ReachabilityCallback(SCNetworkReachabilityRef target, SCNetworkReach
   Reachability *retVal = NULL;
   SCNetworkReachabilityRef reachability = SCNetworkReachabilityCreateWithName(NULL, [hostName UTF8String]);
   if (reachability != NULL) {
-    retVal = [[self alloc] init];
+    retVal = [[[self alloc] init] autorelease];
     if (retVal != NULL) {
       retVal->reachabilityRef = reachability;
       retVal->localWiFiRef = NO;
@@ -128,7 +130,7 @@ static void ReachabilityCallback(SCNetworkReachabilityRef target, SCNetworkReach
   SCNetworkReachabilityRef reachability = SCNetworkReachabilityCreateWithAddress(kCFAllocatorDefault, (const struct sockaddr *)hostAddress);
   Reachability *retVal = NULL;
   if (reachability != NULL) {
-    retVal = [[self alloc] init];
+    retVal = [[[self alloc] init] autorelease];
     if (retVal != NULL) {
       retVal->reachabilityRef = reachability;
       retVal->localWiFiRef = NO;

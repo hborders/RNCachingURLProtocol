@@ -36,12 +36,19 @@
 @synthesize window = _window;
 @synthesize viewController = _viewController;
 
+- (void) dealloc {
+    self.window = nil;
+    self.viewController = nil;
+    
+    [super dealloc];
+}
+
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
   [NSURLProtocol registerClass:[RNCachingURLProtocol class]];
 
-  self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
-  self.viewController = [[ViewController alloc] initWithNibName:@"ViewController" bundle:nil];
+  self.window = [[[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]] autorelease];
+  self.viewController = [[[ViewController alloc] initWithNibName:@"ViewController" bundle:nil] autorelease];
   self.window.rootViewController = self.viewController;
   [self.window makeKeyAndVisible];
   return YES;

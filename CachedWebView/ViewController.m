@@ -35,10 +35,22 @@
 @implementation ViewController
 @synthesize webView = webView_;
 
+- (void) dealloc {
+    self.webView = nil;
+    
+    [super dealloc];
+}
+
 - (void)viewDidLoad
 {
   [super viewDidLoad];
-  [self.webView loadRequest:[[NSURLRequest alloc] initWithURL:[NSURL URLWithString:@"http://cnn.com"]]];
+  [self.webView loadRequest:[[[NSURLRequest alloc] initWithURL:[NSURL URLWithString:@"http://cnn.com"]] autorelease]];
+}
+
+- (void)viewDidUnload {
+    self.webView = nil;
+    
+    [super viewDidUnload];
 }
 
 @end

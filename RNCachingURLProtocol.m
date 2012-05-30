@@ -29,9 +29,9 @@
 #import "Reachability.h"
 
 @interface RNCachedData : NSObject <NSCoding>
-@property (nonatomic, readwrite, strong) NSData *data;
-@property (nonatomic, readwrite, strong) NSURLResponse *response;
-@property (nonatomic, readwrite, strong) NSURLRequest *redirectRequest;
+@property (nonatomic, readwrite, retain) NSData *data;
+@property (nonatomic, readwrite, retain) NSURLResponse *response;
+@property (nonatomic, readwrite, retain) NSURLRequest *redirectRequest;
 @end
 
 static NSString *RNCachingURLHeader = @"X-RNCache";
@@ -39,10 +39,10 @@ static NSString *RNCachingURLRedirectableHeader = @"X-RNCache-Redirectable";
 static NSString *RNCachingURLRedirectedHeader = @"X-RNCache-Redirected";
 
 @interface RNCachingURLProtocol () // <NSURLConnectionDelegate, NSURLConnectionDataDelegate> iOS5-only
-@property (nonatomic, readwrite, strong) NSURLRequest *request;
-@property (nonatomic, readwrite, strong) NSURLConnection *connection;
-@property (nonatomic, readwrite, strong) NSMutableData *data;
-@property (nonatomic, readwrite, strong) NSURLResponse *response;
+@property (nonatomic, readwrite, retain) NSURLRequest *request;
+@property (nonatomic, readwrite, retain) NSURLConnection *connection;
+@property (nonatomic, readwrite, retain) NSMutableData *data;
+@property (nonatomic, readwrite, retain) NSURLResponse *response;
 - (void)appendData:(NSData *)newData;
 @end
 
@@ -74,21 +74,32 @@ static NSString *RNCachingURLRedirectedHeader = @"X-RNCache-Redirected";
                client:(id <NSURLProtocolClient>)client
 {
   // Modify request so we don't loop
-  NSMutableURLRequest *myRequest = [request mutableCopy];
-  [myRequest setValue:@"" forHTTPHeaderField:RNCachingURLHeader];
-    
-  if ([myRequest valueForHTTPHeaderField:RNCachingURLRedirectableHeader]) {
-    [myRequest setValue:@"" forHTTPHeaderField:RNCachingURLRedirectedHeader];
-  }
-
-  self = [super initWithRequest:myRequest
-                 cachedResponse:cachedResponse
-                         client:client];
-
-  if (self) {
-    [self setRequest:myRequest];
-  }
+    @autoreleasepool {
+        NSMutableURLRequest *myRequest = [[request mutableCopy] autorelease];
+        [myRequest setValue:@"" forHTTPHeaderField:RNCachingURLHeader];
+        
+        if ([myRequest valueForHTTPHeaderField:RNCachingURLRedirectableHeader]) {
+            [myRequest setValue:@"" forHTTPHeaderField:RNCachingURLRedirectedHeader];
+        }
+        
+        self = [super initWithRequest:myRequest
+                       cachedResponse:cachedResponse
+                               client:client];
+        
+        if (self) {
+            [self setRequest:myRequest];
+        }
+    }
   return self;
+}
+
+- (void) dealloc {
+    self.request = nil;
+    self.connection = nil;
+    self.data = nil;
+    self.response = nil;
+    
+    [super dealloc];
 }
 
 - (NSString *)cachePathForRequest:(NSURLRequest *)aRequest
@@ -135,20 +146,22 @@ static NSString *RNCachingURLRedirectedHeader = @"X-RNCache-Redirected";
 
 - (NSURLRequest *)connection:(NSURLConnection *)connection willSendRequest:(NSURLRequest *)request redirectResponse:(NSURLResponse *)response
 {
-  NSMutableURLRequest *redirectableRequest = [request mutableCopy];  
-  // Thanks to Nick Dowell https://gist.github.com/1885821
-  if (response != nil) {
-    [redirectableRequest setValue:@"" 
-               forHTTPHeaderField:RNCachingURLRedirectableHeader];
-    NSString *cachePath = [self cachePathForRequest:[self request]];
-    RNCachedData *cache = [RNCachedData new];
-    [cache setResponse:response];
-    [cache setData:[self data]];
-    [cache setRedirectRequest:redirectableRequest];
-    [NSKeyedArchiver archiveRootObject:cache toFile:cachePath];
-    [[self client] URLProtocol:self wasRedirectedToRequest:redirectableRequest redirectResponse:response];
-  }
-  return redirectableRequest;
+    NSMutableURLRequest *redirectableRequest = [[request mutableCopy] autorelease];  
+    @autoreleasepool {
+        // Thanks to Nick Dowell https://gist.github.com/1885821
+        if (response != nil) {
+            [redirectableRequest setValue:@"" 
+                       forHTTPHeaderField:RNCachingURLRedirectableHeader];
+            NSString *cachePath = [self cachePathForRequest:[self request]];
+            RNCachedData *cache = [[RNCachedData new] autorelease];
+            [cache setResponse:response];
+            [cache setData:[self data]];
+            [cache setRedirectRequest:redirectableRequest];
+            [NSKeyedArchiver archiveRootObject:cache toFile:cachePath];
+            [[self client] URLProtocol:self wasRedirectedToRequest:redirectableRequest redirectResponse:response];
+        }
+    }
+    return redirectableRequest;
 }
 
 - (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)data
@@ -172,26 +185,30 @@ static NSString *RNCachingURLRedirectedHeader = @"X-RNCache-Redirected";
 
 - (void)connectionDidFinishLoading:(NSURLConnection *)connection
 {
-  [[self client] URLProtocolDidFinishLoading:self];
-
-  NSString *cachePath = [self cachePathForRequest:[self request]];
-  RNCachedData *cache = [RNCachedData new];
-  [cache setResponse:[self response]];
-  [cache setData:[self data]];
-  [NSKeyedArchiver archiveRootObject:cache toFile:cachePath];
-
-  [self setConnection:nil];
-  [self setData:nil];
+    @autoreleasepool {
+        [[self client] URLProtocolDidFinishLoading:self];
+        
+        NSString *cachePath = [self cachePathForRequest:[self request]];
+        RNCachedData *cache = [[RNCachedData new] autorelease];
+        [cache setResponse:[self response]];
+        [cache setData:[self data]];
+        [NSKeyedArchiver archiveRootObject:cache toFile:cachePath];
+        
+        [self setConnection:nil];
+        [self setData:nil];
+    }
 }
 
 - (void)appendData:(NSData *)newData
 {
-  if ([self data] == nil) {
-    [self setData:[[NSMutableData alloc] initWithData:newData]];
-  }
-  else {
-    [[self data] appendData:newData];
-  }
+    @autoreleasepool {
+        if ([self data] == nil) {
+            [self setData:[[newData mutableCopy] autorelease]];
+        }
+        else {
+            [[self data] appendData:newData];
+        }
+    }
 }
 
 @end
