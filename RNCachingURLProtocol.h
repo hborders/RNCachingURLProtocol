@@ -62,6 +62,7 @@
 
 @interface RNCachingURLProtocol : NSURLProtocol
 
+- (BOOL) useCache;
 - (NSString *)cachePathForRequest:(NSURLRequest *)aRequest;
 
 @end
