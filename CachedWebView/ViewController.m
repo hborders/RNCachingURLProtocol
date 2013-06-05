@@ -38,7 +38,7 @@
 - (void)viewDidLoad
 {
   [super viewDidLoad];
-  [self.webView loadRequest:[[NSURLRequest alloc] initWithURL:[NSURL URLWithString:@"http://cnn.com"]]];
+  [self.webView loadRequest:[[NSURLRequest alloc] initWithURL:[NSURL URLWithString:@"http://google.com"]]];
 }
 
 @end

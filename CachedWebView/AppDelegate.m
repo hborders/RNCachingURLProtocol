@@ -39,12 +39,82 @@
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
   [NSURLProtocol registerClass:[RNCachingURLProtocol class]];
+    
+    [RNCachingURLProtocol setEnabled:NO];
+    
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(request:)
+                                                 name:RNCachingURLProtocolWillStartRequestNotification
+                                               object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(response:)
+                                                 name:RNCachingURLProtocolWillReceiveResponseNotification
+                                               object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(redirect:)
+                                                 name:RNCachingURLProtocolWillRedirectNotification
+                                               object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(error:)
+                                                 name:RNCachingURLProtocolWillFailWithErrorNotification
+                                               object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(data:)
+                                                 name:RNCachingURLProtocolWillReceiveDataNotification
+                                               object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(finished:)
+                                                 name:RNCachingURLProtocolWillFinishNotification
+                                               object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(stop:)
+                                                 name:RNCachingURLProtocolWillStopNotification
+                                               object:nil];
 
   self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
   self.viewController = [[ViewController alloc] initWithNibName:@"ViewController" bundle:nil];
   self.window.rootViewController = self.viewController;
   [self.window makeKeyAndVisible];
   return YES;
+}
+
+- (void)request:(NSNotification *)notification {
+    [self printNotification:notification];
+}
+
+- (void)response:(NSNotification *)notification {
+    [self printNotification:notification];
+}
+
+- (void)redirect:(NSNotification *)notification {
+    [self printNotification:notification];
+}
+
+- (void)error:(NSNotification *)notification {
+    [self printNotification:notification];
+}
+
+- (void)data:(NSNotification *)notification {
+    [self printNotification:notification];
+}
+
+- (void)finished:(NSNotification *)notification {
+    [self printNotification:notification];
+}
+
+- (void)stop:(NSNotification *)notification {
+    [self printNotification:notification];
+}
+
+- (void)printNotification:(NSNotification *)notification {
+    NSMutableDictionary *userInfo = [[notification userInfo] mutableCopy];
+    if ([userInfo objectForKey:RNCachingURLProtocolDataChunkKey]) {
+        [userInfo setObject:[NSData data]
+                     forKey:RNCachingURLProtocolDataChunkKey];
+    }
+    NSLog(@"%@ %@",
+           [notification name],
+           userInfo);
 }
 
 @end
